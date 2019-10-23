@@ -25,6 +25,7 @@ func init() {
 	if opts.Version == true {
 		os.Exit(0)
 	}
+	prometheusInit()
 }
 
 func main() {
@@ -41,9 +42,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/", http.HandlerFunc(infoLookup))
-	log.Info("Serving metrics on " + strconv.FormatInt(int64(opts.Port),10))
+	log.Info("Listening on :" + strconv.FormatInt(int64(opts.Port),10))
 	log.Fatal(http.ListenAndServe(":" + strconv.FormatInt(int64(opts.Port),10), nil))
 }
 
@@ -77,6 +77,7 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 		// Get the current time, so that we can then calculate the execution time.
 		dur := float64(float64(time.Since(start).Nanoseconds()) / 1000000)
 
+		duration.WithLabelValues(retval).Observe(dur)
 		// Log how much time it took to respond to the request, when we're done.
 		if opts.Verbose == true {
 			log.Printf(
