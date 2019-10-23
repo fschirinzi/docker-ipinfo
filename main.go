@@ -3,14 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"flag"
+	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
-	"os"
-	"os/signal"
 	"regexp"
+	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/oschwald/geoip2-golang"
@@ -18,32 +17,36 @@ import (
 
 // The GeoIP database containing data on what IP match to what city/country blah
 // blah.
-var db *geoip2.Reader
+var dbCity *geoip2.Reader
+var dbASN *geoip2.Reader
+var dbCountry *geoip2.Reader
 
 func main() {
 	// Initialize the database.
 	var err error
-	db, err = geoip2.Open("GeoLite2-City.mmdb")
+	dbCity, err = geoip2.Open("GeoLite2-City.mmdb")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Get the HTTP server rollin'
-	log.Println("Server listening!")
-	ln, err := net.Listen("unix", "/tmp/ip.zxq.co.sock")
+	dbASN, err = geoip2.Open("GeoLite2-ASN.mmdb")
 	if err != nil {
 		log.Fatal(err)
 	}
-	os.Chmod("/tmp/ip.zxq.co.sock", 0777)
-	var stop = make(chan os.Signal)
-	signal.Notify(stop, syscall.SIGTERM)
-	signal.Notify(stop, syscall.SIGINT)
-	go func() {
-		<-stop
-		ln.Close()
-		os.Exit(0)
-	}()
-	http.Serve(ln, http.HandlerFunc(handler))
+
+	dbCountry, err = geoip2.Open("GeoLite2-Country.mmdb")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	port := flag.Int("port", 80, "Port")
+	flag.Parse()
+
+	// http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/", http.HandlerFunc(infoLookup))
+	log.Info("Serving metrics on " + strconv.FormatInt(int64(*port), 10))
+	log.Fatal(http.ListenAndServe(":"+strconv.FormatInt(int64(*port), 10), nil))
+
 }
 
 var invalidIPBytes = []byte("Please provide a valid IP address.")
@@ -72,7 +75,7 @@ var nameToField = map[string]func(dataStruct) string{
 	"postal":         func(d dataStruct) string { return d.Postal },
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func infoLookup(w http.ResponseWriter, r *http.Request) {
 	// Get the current time, so that we can then calculate the execution time.
 	start := time.Now()
 
@@ -115,7 +118,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Query the maxmind database for that IP address.
-	record, err := db.City(ip)
+	record, err := dbCity.City(ip)
 	if err != nil {
 		log.Fatal(err)
 	}
