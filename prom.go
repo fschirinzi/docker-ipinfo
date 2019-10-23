@@ -11,7 +11,7 @@ var (
 		prometheus.HistogramOpts{
 			Name:    "job_duration_seconds",
 			Help:    "Jobs duration distribution",
-			Buckets: []float64{.100, .200, .300, .400, .500},
+			Buckets: []float64{.100, .200, .300, .400, .500, 1.000},
 		},
 		[]string{"status"},
 	)
