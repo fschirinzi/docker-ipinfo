@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	"os"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/oschwald/geoip2-golang"
+	log "github.com/sirupsen/logrus"
 )
 
 // The GeoIP databases
