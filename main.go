@@ -44,28 +44,26 @@ func main() {
 
 var invalidIPBytes = []byte("Please provide a valid IP address.")
 
-type dataStruct struct {
-	IP            string `json:"ip"`
-	City          string `json:"city"`
-	Region        string `json:"region"`
-	Country       string `json:"country"`
-	CountryFull   string `json:"country_full"`
-	Continent     string `json:"continent"`
-	ContinentFull string `json:"continent_full"`
-	Loc           string `json:"loc"`
-	Postal        string `json:"postal"`
+type codename struct {
+	Code          string   `json:"code"`
+	Name          string   `json:"name"`
 }
 
-var nameToField = map[string]func(dataStruct) string{
-	"ip":             func(d dataStruct) string { return d.IP },
-	"city":           func(d dataStruct) string { return d.City },
-	"region":         func(d dataStruct) string { return d.Region },
-	"country":        func(d dataStruct) string { return d.Country },
-	"country_full":   func(d dataStruct) string { return d.CountryFull },
-	"continent":      func(d dataStruct) string { return d.Continent },
-	"continent_full": func(d dataStruct) string { return d.ContinentFull },
-	"loc":            func(d dataStruct) string { return d.Loc },
-	"postal":         func(d dataStruct) string { return d.Postal },
+type location struct {
+	Latitude      float64  `json:"latitude"`
+	Longitude     float64  `json:"longitude"`
+}
+
+type ipInfo struct {
+	IP            string   `json:"ip"`
+	City          string   `json:"city"`
+	Region        string   `json:"region"`
+	Country       codename `json:"country"`
+	Continent     codename `json:"continent"`
+	Location      location `json:"location"`
+	Postal        string   `json:"postal"`
+	ASN           uint     `json:"asn"`
+    Organization  string   `json:"organization"`
 }
 
 func infoLookup(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +109,13 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Query the maxmind database for that IP address.
-	record, err := dbCity.City(ip)
+	recCity, err := dbCity.City(ip)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Query the maxmind database for that IP address.
+	recASN, err := dbASN.ASN(ip)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -121,21 +125,36 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 	var sd string
 	// If there are subdivisions for this IP, set sd as the first element in the
 	// array's name.
-	if record.Subdivisions != nil {
-		sd = record.Subdivisions[0].Names["en"]
+	if recCity.Subdivisions != nil {
+		sd = recCity.Subdivisions[0].Names["en"]
+	}
+
+	loc := location {
+		Latitude: 		recCity.Location.Latitude,
+		Longitude:		recCity.Location.Longitude,
+	}
+
+	country := codename {
+		Code:           recCity.Country.IsoCode,
+		Name:           recCity.Country.Names["en"],
+	}
+
+	continent := codename {
+		Code:           recCity.Continent.Code,
+		Name:           recCity.Continent.Names["en"],
 	}
 
 	// Fill up the data array with the geoip data.
-	d := dataStruct{
+	d := ipInfo{
 		IP:            ip.String(),
-		Country:       record.Country.IsoCode,
-		CountryFull:   record.Country.Names["en"],
-		City:          record.City.Names["en"],
+		Country:       country,
+		City:          recCity.City.Names["en"],
 		Region:        sd,
-		Continent:     record.Continent.Code,
-		ContinentFull: record.Continent.Names["en"],
-		Postal:        record.Postal.Code,
-		Loc:           fmt.Sprintf("%.4f,%.4f", record.Location.Latitude, record.Location.Longitude),
+		Continent:     continent,
+		Postal:        recCity.Postal.Code,
+		Location:      loc,
+		ASN:           recASN.AutonomousSystemNumber,
+		Organization:  recASN.AutonomousSystemOrganization,
 	}
 
 	// Since we don't have HTML output, nor other data from geo data,
