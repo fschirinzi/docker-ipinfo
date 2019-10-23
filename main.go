@@ -70,7 +70,7 @@ type ipInfo struct {
 }
 
 func infoLookup(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+	start := time.Now()
 	retval := "200"
 
 	defer func() {
@@ -82,11 +82,11 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 		if opts.Verbose == true {
 			log.Printf(
 				"%s %s %.3f",
-			r.Method,
-			r.URL.Path,
+				r.Method,
+				r.URL.Path,
 				dur,
 			)
-	}
+		}
 	}()
 
 	var IPAddress string
