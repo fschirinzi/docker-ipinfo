@@ -47,6 +47,9 @@ func main() {
 	log.Fatal(http.ListenAndServe(":" + strconv.FormatInt(int64(opts.Port),10), nil))
 }
 
+
+// https://github.com/multiverse-os/ip/blob/1c436abe71f332ef3d2342c7a08a8ad25ae379b9/records.go
+
 type codename struct {
 	Code          string   `json:"code"`
 	Name          string   `json:"name"`
