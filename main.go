@@ -127,7 +127,7 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 	// If there are subdivisions for this IP, set sd as the first element in the
 	// array's name.
 	if recCity.Subdivisions != nil {
-		sd = recCity.Subdivisions[0].Names["en"]
+		sd = recCity.Subdivisions[0].Names[opts.Locale]
 	}
 
 	loc := location {
@@ -137,19 +137,19 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 
 	country := codename {
 		Code:           recCity.Country.IsoCode,
-		Name:           recCity.Country.Names["en"],
+		Name:           recCity.Country.Names[opts.Locale],
 	}
 
 	continent := codename {
 		Code:           recCity.Continent.Code,
-		Name:           recCity.Continent.Names["en"],
+		Name:           recCity.Continent.Names[opts.Locale],
 	}
 
 	// Fill up the data array with the geoip data.
 	d := ipInfo{
 		IP:            ip.String(),
 		Country:       country,
-		City:          recCity.City.Names["en"],
+		City:          recCity.City.Names[opts.Locale],
 		Region:        sd,
 		Continent:     continent,
 		Postal:        recCity.Postal.Code,
