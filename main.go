@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"flag"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -77,18 +76,10 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path,
 		time.Since(start).Nanoseconds())
 
-	// Separate two strings when there is a / in the URL requested.
-	requestedThings := strings.Split(r.URL.Path, "/")
 
 	var IPAddress string
-	var Which string
-	switch len(requestedThings) {
-	case 3:
-		Which = requestedThings[2]
-		fallthrough
-	case 2:
-		IPAddress = requestedThings[1]
-	}
+	IPAddress = strings.Split(r.URL.Path, "/")[1]
+
 
 	// Set the requested IP to the user's request request IP, if we got no address.
 	if IPAddress == "" || IPAddress == "self" {
@@ -159,32 +150,23 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 
 	// Since we don't have HTML output, nor other data from geo data,
 	// everything is the same if you do /8.8.8.8, /8.8.8.8/json or /8.8.8.8/geo.
-	if Which == "" || Which == "json" || Which == "geo" {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		callback := r.URL.Query().Get("callback")
-		enableJSONP := callback != "" && len(callback) < 2000 && callbackJSONP.MatchString(callback)
-		if enableJSONP {
-			_, err = w.Write([]byte("/**/ typeof " + callback + " === 'function' " +
-				"&& " + callback + "("))
-			if err != nil {
-				return
-			}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	callback := r.URL.Query().Get("callback")
+	enableJSONP := callback != "" && len(callback) < 2000 && callbackJSONP.MatchString(callback)
+	if enableJSONP {
+		_, err = w.Write([]byte("/**/ typeof " + callback + " === 'function' " +
+			"&& " + callback + "("))
+		if err != nil {
+			return
 		}
-		enc := json.NewEncoder(w)
-		if r.URL.Query().Get("pretty") == "1" {
-			enc.SetIndent("", "  ")
-		}
-		enc.Encode(d)
-		if enableJSONP {
-			w.Write([]byte(");"))
-		}
-	} else {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		if val := nameToField[Which]; val != nil {
-			w.Write([]byte(val(d)))
-		} else {
-			w.Write([]byte("undefined"))
-		}
+	}
+	enc := json.NewEncoder(w)
+	if r.URL.Query().Get("pretty") == "1" {
+		enc.SetIndent("", "  ")
+	}
+	enc.Encode(d)
+	if enableJSONP {
+		w.Write([]byte(");"))
 	}
 }
 
