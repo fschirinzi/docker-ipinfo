@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
-	"strconv"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/oschwald/geoip2-golang"
@@ -18,7 +18,17 @@ import (
 var dbCity *geoip2.Reader
 var dbASN *geoip2.Reader
 
+var opts *Opts
+
+func init() {
+	opts = ParseOpts()
+	if opts.Version == true {
+		os.Exit(0)
+	}
+}
+
 func main() {
+
 	// Initialize the database.
 	var err error
 	dbCity, err = geoip2.Open("GeoLite2-City.mmdb")
@@ -31,14 +41,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	port := flag.Int("port", 80, "Port")
-	flag.Parse()
-
 	// http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/", http.HandlerFunc(infoLookup))
-	log.Info("Serving metrics on " + strconv.FormatInt(int64(*port), 10))
-	log.Fatal(http.ListenAndServe(":"+strconv.FormatInt(int64(*port), 10), nil))
-
+	log.Info("Serving metrics on " + strconv.FormatInt(int64(opts.Port),10))
+	log.Fatal(http.ListenAndServe(":" + strconv.FormatInt(int64(opts.Port),10), nil))
 }
 
 var invalidIPBytes = []byte("Please provide a valid IP address.")
@@ -66,16 +72,17 @@ type ipInfo struct {
 }
 
 func infoLookup(w http.ResponseWriter, r *http.Request) {
-	// Get the current time, so that we can then calculate the execution time.
-	start := time.Now()
-
 	// Log how much time it took to respond to the request, when we're done.
-	defer log.Printf(
-		"[rq] %s %s %dns",
-		r.Method,
-		r.URL.Path,
-		time.Since(start).Nanoseconds())
+	if opts.Verbose == true {
+		// Get the current time, so that we can then calculate the execution time.
+		start := time.Now()
 
+		defer log.Printf(
+			"%s %s %dns",
+			r.Method,
+			r.URL.Path,
+			time.Since(start).Nanoseconds())
+	}
 
 	var IPAddress string
 	IPAddress = strings.Split(r.URL.Path, "/")[1]
