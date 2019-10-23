@@ -47,8 +47,6 @@ func main() {
 	log.Fatal(http.ListenAndServe(":" + strconv.FormatInt(int64(opts.Port),10), nil))
 }
 
-var invalidIPBytes = []byte("Please provide a valid IP address.")
-
 type codename struct {
 	Code          string   `json:"code"`
 	Name          string   `json:"name"`
@@ -72,21 +70,26 @@ type ipInfo struct {
 }
 
 func infoLookup(w http.ResponseWriter, r *http.Request) {
-	// Log how much time it took to respond to the request, when we're done.
-	if opts.Verbose == true {
-		// Get the current time, so that we can then calculate the execution time.
 		start := time.Now()
+	retval := "200"
 
-		defer log.Printf(
-			"%s %s %dns",
+	defer func() {
+		// Get the current time, so that we can then calculate the execution time.
+		dur := float64(float64(time.Since(start).Nanoseconds()) / 1000000)
+
+		// Log how much time it took to respond to the request, when we're done.
+		if opts.Verbose == true {
+			log.Printf(
+				"%s %s %.3f",
 			r.Method,
 			r.URL.Path,
-			time.Since(start).Nanoseconds())
+				dur,
+			)
 	}
+	}()
 
 	var IPAddress string
 	IPAddress = strings.Split(r.URL.Path, "/")[1]
-
 
 	// Set the requested IP to the user's request request IP, if we got no address.
 	if IPAddress == "" || IPAddress == "self" {
@@ -101,8 +104,8 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 
 	ip := net.ParseIP(IPAddress)
 	if ip == nil {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Write(invalidIPBytes)
+		http.Error(w, "Invalid IP address" , http.StatusBadRequest)
+		retval = "400"
 		return
 	}
 
