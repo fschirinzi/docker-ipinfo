@@ -15,11 +15,9 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
-// The GeoIP database containing data on what IP match to what city/country blah
-// blah.
+// The GeoIP databases
 var dbCity *geoip2.Reader
 var dbASN *geoip2.Reader
-var dbCountry *geoip2.Reader
 
 func main() {
 	// Initialize the database.
@@ -30,11 +28,6 @@ func main() {
 	}
 
 	dbASN, err = geoip2.Open("GeoLite2-ASN.mmdb")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	dbCountry, err = geoip2.Open("GeoLite2-Country.mmdb")
 	if err != nil {
 		log.Fatal(err)
 	}
