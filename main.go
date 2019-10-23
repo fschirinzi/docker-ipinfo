@@ -88,7 +88,7 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 			IPAddress = realIP[0]
 		} else {
 			// Get the real actual request IP without the trolls
-			IPAddress = UnfuckRequestIP(r.RemoteAddr)
+			IPAddress = DefangIP(r.RemoteAddr)
 		}
 	}
 
@@ -174,7 +174,7 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 var callbackJSONP = regexp.MustCompile(`^[a-zA-Z_\$][a-zA-Z0-9_\$]*$`)
 
 // Remove from the IP eventual [ or ], and remove the port part of the IP.
-func UnfuckRequestIP(ip string) string {
+func DefangIP(ip string) string {
 	ip = strings.Replace(ip, "[", "", 1)
 	ip = strings.Replace(ip, "]", "", 1)
 	ss := strings.Split(ip, ":")
