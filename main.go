@@ -81,7 +81,8 @@ func infoLookup(w http.ResponseWriter, r *http.Request) {
 		// Log how much time it took to respond to the request, when we're done.
 		if opts.Verbose == true {
 			log.Printf(
-				"%s %s %.3f",
+				"%s %s %s %.3f",
+				DefangIP(r.RemoteAddr),
 				r.Method,
 				r.URL.Path,
 				dur,
