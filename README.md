@@ -1,3 +1,4 @@
+
 # ipInfo
 
 An ipinfo.io clone, without the rate limiting. And some other goodies.
@@ -7,6 +8,21 @@ An ipinfo.io clone, without the rate limiting. And some other goodies.
 ipinfo.io sets a rate limiting of 1000 requests per day. I understand it, although that is a bit of a bummer.
 
 ## Usage
+
+**Copy your MaxMin Databases (*.mmdb files) in the `databases` folder in the project directory. They are not included in this repo!**
+
+### Start docker container
+
+`ipinfo:1.0` : how the image should be called and the version tag you want to give it <br/>
+`80:80` :  Port binded to you local machine and the port in the docker container <br/>
+`ipinfo-test` : the name of the created container
+
+```
+docker image build . -t ipinfo:1.0
+docker container run -p 80:80 --name ipinfo-test ipinfo:1.0
+```
+
+### Make requests
 
 This is really similiar to the way ipinfo.io does it. Every response will be identical from ipinfo.io's, almost. So, basic usage: you will just make a GET request to <http://ip.zxq.co/[ip]>, like http://ip.zxq.co/8.8.8.8. Need to get something specific? http://ip.zxq.co/8.8.8.8/country.
 
@@ -129,4 +145,4 @@ This product includes GeoLite2 data created by MaxMind, available from http://ww
 
 ## Credits
 
-Inspired by [ip.zxq.co](https://github.com/thehowl/ip.zxq.co).
+Inspired by [jnovack/docker-ipinfo](https://github.com/jnovack/docker-ipinfo).

@@ -32,12 +32,12 @@ func main() {
 
 	// Initialize the database.
 	var err error
-	dbCity, err = geoip2.Open("GeoLite2-City.mmdb")
+	dbCity, err = geoip2.Open("./databases/GeoLite2-City.mmdb")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	dbASN, err = geoip2.Open("GeoLite2-ASN.mmdb")
+	dbASN, err = geoip2.Open("./databases/GeoLite2-ASN.mmdb")
 	if err != nil {
 		log.Fatal(err)
 	}
