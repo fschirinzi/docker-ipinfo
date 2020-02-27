@@ -11,7 +11,7 @@ ipinfo.io sets a rate limiting of 1000 requests per day. I understand it, althou
 
 ## Usage
 
-**Copy your MaxMin Databases (*.mmdb files) in the `databases` folder in the project directory. They are not included in this repo!**
+**Copy your MaxMin Databases (*.mmdb files) in the `databases` folder in the project directory or mount the direcotry with the files in the container (see docker with Mount). They are not included in this repo!**
 
 ### Start docker container
 
@@ -19,10 +19,22 @@ ipinfo.io sets a rate limiting of 1000 requests per day. I understand it, althou
 `80:80` :  Port binded to you local machine and the port in the docker container <br/>
 `ipinfo-test` : the name of the created container
 
+#### Normal
+
 ```
 docker image build . -t ipinfo:1.0
 docker container run -p 80:80 --name ipinfo-test ipinfo:1.0
 ```
+
+#### Mounting the database folder
+
+**For WINDOWS** - Change the path to the drive letter like this:   `C:/...` -> `/c/...`
+
+```
+docker image build . -t ipinfo:1.0
+docker container run -p 80:80 -v /c/localDir/databases:/app/databases --name ipinfo-test ipinfo:1.0
+```
+
 
 ### Make requests
 
